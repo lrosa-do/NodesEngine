@@ -490,7 +490,12 @@ class Game
          {
             image.onload = () => 
             {
-                game_images.push(image);
+                const path = src;
+                const filename = path.split('/').pop();
+                const filenameWithoutExtension = filename.split('.').slice(0, -1).join('.'); // Remove a extensão
+
+                let graph = new Graph(image,filenameWithoutExtension,game_images.length);
+                game_images.push(graph);
                 resolve(image);
             };
 
@@ -499,7 +504,7 @@ class Game
             };
         });
     }
-     static   async LoadImages(imageSources, delayBetweenImages = 10)
+     static   async LoadImagesDelay(imageSources, delayBetweenImages = 10)
      {
         const totalImages = imageSources.length;
         let loadedImages = 0;
@@ -551,32 +556,32 @@ class Game
         }
     }
 
-    // static async LoadImages(imageSources) 
-    // {
-    //     const totalImages = imageSources.length;
-    //     let loadedImages = 0;
+    static async LoadImages(imageSources) 
+    {
+        const totalImages = imageSources.length;
+        let loadedImages = 0;
 
-    //     const promises = imageSources.map(src => 
-    //         {
-    //         return this.AddImage(src).then(() => 
-    //         {
-    //             loadedImages++;
-    //             const progress = loadedImages / totalImages;
-    //             this.drawProgressBar(progress);
+        const promises = imageSources.map(src => 
+            {
+            return this.AddImage(src).then(() => 
+            {
+                loadedImages++;
+                const progress = loadedImages / totalImages;
+                this.drawProgressBar(progress);
                 
-    //         });
-    //     });
+            });
+        });
 
-    //     try 
-    //     {
-    //         await Promise.all(promises);
-    //         console.log('Todas as imagens foram carregadas com sucesso!');
-    //         this.drawProgressBar(1); 
-    //     } catch (error) 
-    //     {
-    //         console.error('Erro ao carregar imagens:', error);
-    //     }
-    // }
+        try 
+        {
+            await Promise.all(promises);
+            console.log('Todas as imagens foram carregadas com sucesso!');
+            this.drawProgressBar(1); 
+        } catch (error) 
+        {
+            console.error('Erro ao carregar imagens:', error);
+        }
+    }
     static gameLoop(tm) 
     {
         
