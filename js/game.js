@@ -87,6 +87,26 @@ function getImage(index)
     return game_images[index];
 }
 
+function setImageName(index,name)
+{
+    game_images[index].name=name;
+}
+
+
+function getImageByName(name)
+{
+    for (let i = 0; i < game_images.length; i++)
+    {   
+        const image = game_images[i];
+        if (image.name === name)
+        {
+            return image;
+        }
+    }
+    console.log(`Imagem "${name}" não encontrada.`);
+    return null;
+}
+
 function resizeCanvas(width, height ) 
 {
     SCREEN_WIDTH  = width;
@@ -101,6 +121,19 @@ function resizeCanvas(width, height )
     console.log(Game.width + " " + Game.height);
 }
 //********************************************************************************************** */
+
+class Graph
+{
+    constructor(image,name,id)
+    {
+        this.image=image;
+        this.name=name;
+        this.id=id;
+        console.log("Create Graph "+ name + " " + id);
+    }
+   
+
+}
 class Scene
 {
     width=0;
@@ -480,7 +513,12 @@ class Game
 
                 image.onload = () => 
                 {
-                    game_images.push(image);
+                    const path = src;
+                    const filename = path.split('/').pop();
+                    const filenameWithoutExtension = filename.split('.').slice(0, -1).join('.'); // Remove a extensão
+
+                    let graph = new Graph(image,filenameWithoutExtension,loadedImages);
+                    game_images.push(graph);
                     resolve(image);
                 };
 

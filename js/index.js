@@ -60,7 +60,7 @@ class Player extends NodeScript
         {
             this.animation.SetFrame(0);
         }
-        console.log(velocity);
+      //  console.log(velocity);
   
 
         if (IsMouseButtonDown(0))
@@ -195,7 +195,7 @@ let height = window.innerHeight;
 Game.Init(true,width, height, true);
 Game.AddScene("main", new MainScene());
 Game.SetCurrentScene("main");
-Game.LoadImages(imageSources).then(() => 
+Game.LoadImages(imageSources,1).then(() => 
 {
     console.log('Todas as imagens foram carregadas. Iniciando o jogo.');
     Game.Start();

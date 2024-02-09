@@ -410,10 +410,10 @@ class Sprite extends Basic
             {   
                 let sourceWidth  = this.clip.width;
                 let sourceHeight = this.clip.height;
-                ctx.drawImage(this.image,this.clip.x,this.clip.y,sourceWidth,sourceHeight,0,0,sourceWidth,sourceHeight);
+                ctx.drawImage(this.image.image,this.clip.x,this.clip.y,sourceWidth,sourceHeight,0,0,sourceWidth,sourceHeight);
             } else
             {
-                ctx.drawImage(this.image,0,0);
+                ctx.drawImage(this.image.image,0,0);
             }
             
         }
