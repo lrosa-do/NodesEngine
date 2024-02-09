@@ -466,7 +466,7 @@ class Game
             };
         });
     }
-     static   async LoadImages(imageSources, delayBetweenImages = 50)
+     static   async LoadImages(imageSources, delayBetweenImages = 10)
      {
         const totalImages = imageSources.length;
         let loadedImages = 0;
