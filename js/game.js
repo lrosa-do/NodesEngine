@@ -675,7 +675,7 @@ class Game
       {
           this.currentScene.OnMouseDown(MouseX,MouseY, 0);
       }
-
+      e.preventDefault();
        
 
     }
@@ -693,7 +693,7 @@ class Game
       {
           this.currentScene.OnMouseUp(MouseX,MouseY, 0);
       }
-
+      e.preventDefault();
   
     
     }
@@ -708,7 +708,7 @@ class Game
           this.currentScene.OnMouseMove(MouseX,MouseY);
       }
   
-    
+      e.preventDefault();
   
     }
   
