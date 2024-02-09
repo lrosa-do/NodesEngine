@@ -466,32 +466,79 @@ class Game
             };
         });
     }
-
-    static async LoadImages(imageSources) 
-    {
+     static   async LoadImages(imageSources, delayBetweenImages = 50)
+     {
         const totalImages = imageSources.length;
         let loadedImages = 0;
 
-        const promises = imageSources.map(src => 
+        const loadImageWithDelay = async (src) => 
+        {
+            return new Promise((resolve, reject) =>
+             {
+                const image = new Image();
+                image.src = src;
+
+                image.onload = () => 
+                {
+                    game_images.push(image);
+                    resolve(image);
+                };
+
+                image.onerror = (error) =>
+                 {
+                    reject(error);
+                };
+            });
+        };
+
+        const loadImagesSequentially = async () => 
+        {
+            for (const src of imageSources) 
             {
-            return this.AddImage(src).then(() => 
-            {
+                await loadImageWithDelay(src);
                 loadedImages++;
                 const progress = loadedImages / totalImages;
                 this.drawProgressBar(progress);
-                
-            });
-        });
+                await new Promise(resolve => setTimeout(resolve, delayBetweenImages));
+            }
+        };
 
-        try 
-        {
-            await Promise.all(promises);
+        try {
+            await loadImagesSequentially();
             console.log('Todas as imagens foram carregadas com sucesso!');
-            this.drawProgressBar(1); 
-        } catch (error) {
+            this.drawProgressBar(1); // Atualiza a barra de progresso para 100% quando todas as imagens são carregadas
+        } catch (error) 
+        {
             console.error('Erro ao carregar imagens:', error);
         }
     }
+
+    // static async LoadImages(imageSources) 
+    // {
+    //     const totalImages = imageSources.length;
+    //     let loadedImages = 0;
+
+    //     const promises = imageSources.map(src => 
+    //         {
+    //         return this.AddImage(src).then(() => 
+    //         {
+    //             loadedImages++;
+    //             const progress = loadedImages / totalImages;
+    //             this.drawProgressBar(progress);
+                
+    //         });
+    //     });
+
+    //     try 
+    //     {
+    //         await Promise.all(promises);
+    //         console.log('Todas as imagens foram carregadas com sucesso!');
+    //         this.drawProgressBar(1); 
+    //     } catch (error) 
+    //     {
+    //         console.error('Erro ao carregar imagens:', error);
+    //     }
+    // }
     static gameLoop(tm) 
     {
         
