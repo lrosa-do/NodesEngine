@@ -189,7 +189,7 @@ class MainScene extends Scene
 
        for (let i = 0; i < this.massas.length; i++)
        {
-           let x = 40 + (i*120);
+           let x = 40 + (i*100);
            let y = 100;
            this.addNode(x,y,this.massas[i]);
        }
