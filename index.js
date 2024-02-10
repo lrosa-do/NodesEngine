@@ -40,7 +40,7 @@ class Player extends NodeScript
     ready()
     {
         console.log("Player");
-        this.radius = 40 + this.parent.scaleX* this.mass;
+        this.radius = 20 + this.parent.scaleX* this.mass;
         this.spriteEyes = new Sprite(4);
         this.animation = new Animator(this.spriteEyes);
 
@@ -54,9 +54,9 @@ class Player extends NodeScript
         this.nodeHead.x=-25 * this.parent.scaleX;
         this.nodeHead.y=-15 * this.parent.scaleY;
 
-        let body = new Sprite(0);
+        let body = new Sprite(random(0,2));
 
-      //  this.nodeHead.Add(body);
+        this.nodeHead.Add(body);
         
         this.nodeHead.Add(this.spriteEyes);
         this.nodeHead.Add(this.animation);
@@ -187,10 +187,12 @@ class MainScene extends Scene
     addNodes()
     {
 
-        this.addNode(100,100,this.massas[0]);
-        this.addNode(200,100,this.massas[1]);
-        this.addNode(300,100,this.massas[2]);
-        this.addNode(400,100,this.massas[3]);
+       for (let i = 0; i < this.massas.length; i++)
+       {
+           let x = 40 + (i*120);
+           let y = 100;
+           this.addNode(x,y,this.massas[i]);
+       }
     }
     removePlayer()
     {
@@ -217,7 +219,7 @@ class MainScene extends Scene
         node.y=y;
         node.scaleX=0.5 * (mass*0.5);
         node.scaleY=0.5 * (mass*0.5);
-        node.x= x + (mass * node.scaleX);
+        node.x= x ;
 
         // nodeShape.x=-40 * node.scaleX;
         // nodeShape.y=-40 * node.scaleY;
