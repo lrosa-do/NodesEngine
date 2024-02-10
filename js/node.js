@@ -207,6 +207,23 @@ class Basic
         return null;
     
     }
+    GetChild(index)
+    {
+        return  this.children[index];
+    
+    }
+    GetChildByName(name)
+    {
+        for (let i = 0; i < this.children.length; i++) 
+        {
+            const child = this.children[i];
+            if (child.name === name) 
+            {
+                return child;
+            }
+        }
+        return null;
+    }
 }
 
 
@@ -348,8 +365,9 @@ class Animator extends Basic
         }
     }
     
-    update(dt)
+    OnUpdate(dt)
     {
+        super.OnUpdate(dt);
         if (this.currentAnimation !== null)
         {
             this.currentAnimation.update(dt);
@@ -368,7 +386,7 @@ class Animator extends Basic
 
 class Sprite extends Basic
 {
-    constructor(graph,bound)
+    constructor(graph, bound)
     {
         super("Sprite");
         this.graph=graph;
@@ -404,6 +422,10 @@ class Sprite extends Basic
         super.OnRender(ctx);
 
         this.image = getImage(this.graph);
+        if (this.image ===undefined)
+        {
+           return;
+        }
         if (this.image !==null)
         {
             if (this.clip!==null && this.useClip===true)
@@ -420,7 +442,156 @@ class Sprite extends Basic
     }
 }
 
+class BackGround extends Basic
+{
+    constructor(graph,width,height)
+    {
+        super("Background");
+        this.graph=graph;
+        this.width=width;
+        this.height=height;
+        this.image = getImage(graph);
+        this.type="BACKGROUND";
+    }
+    OnRender(ctx)
+    {
+        if (!this.visible) return;
+        this.image = getImage(this.graph);
+        if (this.image ===undefined)
+        {
+           return;
+        }
 
+        super.OnRender(ctx);
+        if (this.image !==null)
+        {
+            ctx.drawImage(this.image.image,0,0,this.width,this.height);
+        }
+    }
+}
+
+class ScrollBackground extends Basic
+{
+    
+ 
+
+
+
+    constructor(graph, x_factor, y_factor, fill_x, fill_y)
+    {
+        super("ScrollBackground");
+        this.graph=graph;
+        this.width=width;
+        this.height=height;
+        this.image = getImage(graph);
+        this.type="SCROLL_BACKGROUND";
+
+        this.scrollX=0;
+        this.scrollY=0;
+   
+   
+        this.scrollSpeedX = x_factor || 0;
+        this.scrollSpeedY = y_factor || 0;
+
+        this.frag_x = this.scrollSpeedX - Math.floor(this.scrollSpeedX);
+        this.frag_y = this.scrollSpeedY - Math.floor(this.scrollSpeedY);
+
+
+    
+
+        this.fillX=fill_x || false;
+        this.fillY=fill_y || false;
+
+        if (this.image!==undefined)
+        {
+       
+            this.max_dist_x = Math.ceil(Game.width / this.image.width)   + 1;
+            this.max_dist_y = Math.ceil(Game.height / this.image.height) + 1;
+
+            this.scrollXSize =  this.image.width    + 1;
+            this.scrollYSize =  this.image.height   + 1;
+            console.log(this.max_dist_x + " " + this.max_dist_y);   
+        }
+        
+    }
+    OnProcess()
+    {
+        super.OnProcess();
+        this.scrollX -= 2 * (this.scrollSpeedX);
+        this.scrollY -= 2 * (this.scrollSpeedY);
+        if (this.image !==null)
+        {
+            if (this.scrollX > this.scrollXSize) this.scrollX = 0;
+            if (this.scrollY > this.scrollYSize) this.scrollY = 0;
+            if (this.scrollX < 0) this.scrollX = this.image.width;
+            if (this.scrollY < 0) this.scrollY = this.image.height;
+        }
+    }
+    OnRender(ctx)
+    {
+        if (!this.visible) return;
+        this.image = getImage(this.graph);
+        if (this.image === undefined)
+        {
+            console.log("image not found");
+           return;
+        }
+
+       
+
+        super.OnRender(ctx);
+        if (this.image !==null)
+        {
+    
+
+            this.max_dist_x = Math.ceil(Game.width / this.image.width)   + 1;
+            this.max_dist_y = Math.ceil(Game.height / this.image.height) + 1;
+    
+            this.scrollXSize =  this.image.width    + 1;
+            this.scrollYSize =  this.image.height   + 1;
+         
+            
+
+
+            let fill_w = (this.fillX) ? Game.width  : this.image.width;
+            let fill_h = (this.fillY) ? Game.height : this.image.height;
+
+      
+        
+            let off_x=0;
+            let off_y=0;
+            for (let x = 0; x < this.max_dist_x; x++) 
+            {
+                for (let y = 0; y < this.max_dist_y; y++) 
+                {
+                   
+
+                    ctx.drawImage(
+                        this.image.image, 
+                        (-this.scrollX + x * this.image.width)  -off_x,
+                        (-this.scrollY + y * this.image.height) -off_y,
+                        this.image.width  -off_x,
+                        this.image.height -off_y ,
+                        0,0,fill_w,fill_h
+                    );
+
+                    off_x += this.frag_x;
+                    off_y += this.frag_y;
+
+                }
+            }
+            
+
+                
+
+            ctx.fillStyle = 'lime';
+            ctx.font = '13px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(`${this.scrollX} ${this.scrollY}  ${this.max_dist_x} ${this.max_dist_y}  ${this.scrollXSize} ${this.scrollYSize}`, 80, 80);
+          
+        }
+    }
+}
 
 class NodeScript extends Basic
 {
@@ -480,8 +651,8 @@ class Node extends Basic
         ctx.scale(this.scaleX,this.scaleY);
         super.OnRender(ctx);
         ctx.restore();
-
- 
+      //  Game.SetColor(255,0,0);
+     //   Game.Circle(0,0,5);
     }
     
 }
@@ -602,34 +773,35 @@ class Actor  extends Node
         
 
     }
+    // Newton's 2nd law: F = M * A
+    // or A = F / M
     ApplyForce(force)
     {
-        let f = force.divide(this.mass);
-        
-        this.acceleration=this.acceleration.add(force);
+        this.acceleration.x += force.x / this.mass;
+        this.acceleration.y += force.y / this.mass;
     }
-    SetClipBoud(bound)
+    SetClipBoud(bound,x_dump,y_dump)
     {   
 
         if (this.x < bound.x)
         {
-            this.velocity.x *= -1;
+            this.velocity.x *= -x_dump;
             this.x = bound.x;
         }
         else if (this.x > bound.width)
         {
-            this.velocity.x *= -1;
+            this.velocity.x *= -x_dump;
             this.x = bound.width;
         }
         if (this.y < bound.y)
         {
-            this.velocity.y *= -1;
+            this.velocity.y *= -y_dump;
             this.y = bound.y;
         }
         else
         if (this.y > bound.height) 
         {
-        this.velocity.y *= -1;
+        this.velocity.y *= -y_dump;
         this.y = bound.height;
         }
 
@@ -641,12 +813,18 @@ class Actor  extends Node
 
         super.OnProcess();
         
-        this.velocity = this.velocity.add(this.acceleration);
+        // Velocity changes according to acceleration
+        this.velocity.x += this.acceleration.x;
+        this.velocity.y += this.acceleration.y;
+
+         // position changes by velocity
 
         this.x += this.velocity.x ;
         this.y += this.velocity.y ;   
 
-        this.acceleration.mult(0);
+         // We must clear acceleration each frame
+         this.acceleration.x = 0;
+         this.acceleration.y = 0;
 
 
     }

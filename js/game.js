@@ -118,7 +118,7 @@ function resizeCanvas(width, height )
     }
     Game.width = SCREEN_WIDTH;
     Game.height = SCREEN_HEIGHT;
-    console.log(Game.width + " " + Game.height);
+  //  console.log(Game.width + " " + Game.height);
 }
 //********************************************************************************************** */
 
@@ -129,7 +129,9 @@ class Graph
         this.image=image;
         this.name=name;
         this.id=id;
-        console.log("Create Graph "+ name + " " + id);
+        this.width=image.width;
+        this.height=image.height;
+        console.log("Create Graph "+ name + " " + id+  " (" + this.width + " " + this.height+")");
     }
    
 
@@ -248,7 +250,7 @@ class Scene
 
     OnRender()
     {
-        this.render(ctx);
+      
         for (const node of this.nodes) 
         {
             if (node.visible)
@@ -258,7 +260,8 @@ class Scene
                 node.OnPostRender(ctx);
                 
             }
-        }
+        } 
+        this.render(ctx);
     
     }
     OnProcess()
@@ -338,10 +341,9 @@ class Scene
     }
     OnResize(w,h)
     {
-        this.width =w;
-        this.height=h;
-        this.resize(w,h);
-
+        this.width  = w;
+        this.height = h;
+        this.resize(w , h);
     }
  
 }
@@ -350,17 +352,20 @@ class Scene
 class Game 
 {
     static isRunning = false;
+    static isReady=false;
     static button = 0;
     static currentScene = null;
     static scenes = {};
+    static imagesToLoad=[];
     static width = window.innerWidth;
     static height = window.innerHeight;
     static rect = canvas.getBoundingClientRect();
+    static callReady = false;
 
     static Init(fill,w,h,smooth) 
     {
         smooth = (typeof smooth !== 'undefined') ?  smooth : true;
-        this.width = w || window.innerWidth;
+        this.width  = w || window.innerWidth;
         this.height = h || window.innerHeight;
         this.fillScreen= fill;
         canvas.width = this.width;
@@ -398,10 +403,20 @@ class Game
         
 
     }
+
+    static AddImage(src,name)
+    {
+        this.imagesToLoad.push({src:src,name:name});
+
+        return this.imagesToLoad.length-1; 
+    }
+
+
     
     static Start() 
     {
         this.isRunning = true;
+        this.isReady=true;
         this.gameLoop(0);
     }
 
@@ -420,16 +435,14 @@ class Game
         if (this.currentScene) 
         {
       
+            this.callReady = false;
             this.currentScene.close();
             this.currentScene.clear();
         }
 
         this.currentScene = this.scenes[sceneName];
 
-        if (this.currentScene) 
-        {
-            this.currentScene.ready();
-        }
+       
     }
 
    static render()
@@ -452,6 +465,14 @@ class Game
     }
     static update(dt)
     {
+
+        if (!this.isReady) return;
+        if (this.currentScene && !this.callReady) 
+        {
+            this.callReady = true;
+            this.currentScene.ready();
+        }
+
         if (this.currentScene) 
         {
             this.currentScene.OnUpdate(dt);
@@ -481,35 +502,37 @@ class Game
         ctx.fillText(`CARREGANDO  ${Math.round(progress * 100)}%`, this.width / 2, this.progressBar.y - 10);
     }
     
-    static AddImage(src) 
-    {
-        const image = new Image();
-        image.src = src;
+    // static AddImage(src,name,id) 
+    // {
+    //     const image = new Image();
+    //     image.src = src;
 
-        return new Promise((resolve, reject) =>
-         {
-            image.onload = () => 
-            {
-                const path = src;
-                const filename = path.split('/').pop();
-                const filenameWithoutExtension = filename.split('.').slice(0, -1).join('.'); // Remove a extensão
+    //     return new Promise((resolve, reject) =>
+    //      {
+    //         image.onload = () => 
+    //         {
+    //             //const path = src;
+    //             //const filename = path.split('/').pop();
+    //             //const filenameWithoutExtension = filename.split('.').slice(0, -1).join('.'); // Remove a extensão
 
-                let graph = new Graph(image,filenameWithoutExtension,game_images.length);
-                game_images.push(graph);
-                resolve(image);
-            };
+    //             let graph = new Graph(image,name,id);
+    //             game_images.push(graph);
+    //             resolve(image);
+    //         };
 
-            image.onerror = (error) => {
-                reject(error);
-            };
-        });
-    }
-     static   async LoadImagesDelay(imageSources, delayBetweenImages = 10)
+    //         image.onerror = (error) => {
+    //             reject(error);
+    //         };
+    //     });
+    // }
+     static   async LoadImagesDelay( delayBetweenImages = 10)
      {
-        const totalImages = imageSources.length;
+        const totalImages = this.imagesToLoad.length;
         let loadedImages = 0;
+        console.log("Total de imagens "+ totalImages);
+       
 
-        const loadImageWithDelay = async (src) => 
+        const loadImageWithDelay = async (src,name) => 
         {
             return new Promise((resolve, reject) =>
              {
@@ -518,37 +541,44 @@ class Game
 
                 image.onload = () => 
                 {
-                    const path = src;
-                    const filename = path.split('/').pop();
-                    const filenameWithoutExtension = filename.split('.').slice(0, -1).join('.'); // Remove a extensão
+                  //  const path = src;
+                  //  const filename = path.split('/').pop();
+                  //  const filenameWithoutExtension = filename.split('.').slice(0, -1).join('.'); // Remove a extensão
 
-                    let graph = new Graph(image,filenameWithoutExtension,loadedImages);
+                    let graph = new Graph(image,name,loadedImages);
                     game_images.push(graph);
+                   
+     
                     resolve(image);
                 };
 
-                image.onerror = (error) =>
+                  image.onerror = (error) =>
                  {
                     reject(error);
+                    console.error('Erro ao carregar a imagem:', error); 
                 };
             });
         };
 
         const loadImagesSequentially = async () => 
         {
-            for (const src of imageSources) 
+
+            for (const image of this.imagesToLoad) 
             {
-                await loadImageWithDelay(src);
+                await loadImageWithDelay(image.src,image.name,loadedImages);
                 loadedImages++;
                 const progress = loadedImages / totalImages;
                 this.drawProgressBar(progress);
                 await new Promise(resolve => setTimeout(resolve, delayBetweenImages));
             }
+           
         };
 
-        try {
+        try 
+        {
             await loadImagesSequentially();
             console.log('Todas as imagens foram carregadas com sucesso!');
+            Game.isReady=true;
             this.drawProgressBar(1); // Atualiza a barra de progresso para 100% quando todas as imagens são carregadas
         } catch (error) 
         {
@@ -556,34 +586,35 @@ class Game
         }
     }
 
-    static async LoadImages(imageSources) 
-    {
-        const totalImages = imageSources.length;
-        let loadedImages = 0;
+    // static async LoadImages() 
+    // {
+    //     const totalImages = imagesToLoad.length;
+    //     let loadedImages = 0;
 
-        const promises = imageSources.map(src => 
-            {
-            return this.AddImage(src).then(() => 
-            {
-                loadedImages++;
-                const progress = loadedImages / totalImages;
-                this.drawProgressBar(progress);
+    //     const promises = imagesToLoad.map(src => 
+    //         {
+    //         return this.AddImage(src).then(() => 
+    //         {
+    //             loadedImages++;
+    //             const progress = loadedImages / totalImages;
+    //             this.drawProgressBar(progress);
                 
-            });
-        });
+    //         });
+    //     });
 
-        try 
-        {
-            await Promise.all(promises);
-            console.log('Todas as imagens foram carregadas com sucesso!');
-            this.drawProgressBar(1); 
-        } catch (error) 
-        {
-            console.error('Erro ao carregar imagens:', error);
-        }
-    }
+    //     try 
+    //     {
+    //         await Promise.all(promises);
+    //         console.log('Todas as imagens foram carregadas com sucesso!');
+    //         this.drawProgressBar(1); 
+    //     } catch (error) 
+    //     {
+    //         console.error('Erro ao carregar imagens:', error);
+    //     }
+    // }
     static gameLoop(tm) 
     {
+       
         
         if (!this.isRunning) 
         {
@@ -606,6 +637,10 @@ class Game
             this.process();
         }
         this.update(deltaTime);
+        
+        Game.width  = canvas.width;
+        Game.height = canvas.height;
+
         this.render();
 
         for (let i = 0; i < 3; i++)
@@ -633,11 +668,10 @@ class Game
     }
     static handleResize(e) 
     {
-        console.log("resize"+ e.target.innerWidth + " " + e.target.innerHeight);
-      resizeCanvas(e.target.innerWidth , e.target.innerHeight);
+      resizeCanvas(e.target.innerWidth, e.target.innerHeight);
       if (this.currentScene) 
       {
-          this.currentScene.OnResize(e.target.innerWidth , e.target.innerHeigh);
+          this.currentScene.OnResize(e.target.innerWidth, e.target.innerHeight);
       }
     }
     static handleMouseMenu(e)
@@ -663,6 +697,7 @@ class Game
         //SCREEN_HEIGHT = window.innerHeight;
       ///   canvas.width = SCREEN_WIDTH;
      //    canvas.height =SCREEN_HEIGHT;
+      
         console.log("Load "+ canvas.width +  " " + canvas.height);
     }
   
@@ -914,20 +949,28 @@ class Game
         ctx.fill();
     }
 
+    static SetFontDefault()
+    {
+        ctx.font = "10px sans-serif";
+    }
 
-
+    static SetFont(name,size)
+    {
+        ctx.font = size + "px " + name;
+      //  console.log("set"+ctx.font);
+    }
 
     static Text( text, x,y, align)
     {
         align = typeof align !== 'undefined' ?  align : "left";
         ctx.textAlign = align;
         ctx.fillText(text,x,y);
+       
+    }
+    static SetCursor(name)
+    {
+        canvas.style.cursor = name;
     }
 
 
-
-
-    }
-
-
-
+}

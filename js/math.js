@@ -20,6 +20,11 @@ function random(min, max)
     return Math.floor(Math.random() * (max - min + 1) + min);
 }
 
+function randomFloat(min, max)
+{
+	return Math.random() * (max - min) + min;
+}
+
 function rand32()
 {
 	return rand()|(rand()<<16);
@@ -143,6 +148,17 @@ function ScaleClamp(value,min,max,min2,max2)
 }
 
 
+function PointInCircle(x,y,cx,cy,r)
+{
+	return (x-cx)*(x-cx)+(y-cy)*(y-cy)<r*r;
+}
+
+function PointInRect(x,y,rx,ry,rw,rh)
+{
+	return x>=rx && x<=rx+rw && y>=ry && y<=ry+rh;
+}
+
+
 class Bound 
 {
     constructor(x,y,w,h)
@@ -238,6 +254,16 @@ class Vector2
 	{
         return new Vector2(this.x, this.y);
     }
+	copy(vector)
+	{
+		this.x = vector.x;
+		this.y = vector.y;
+		return this;
+	}
+	setMagnitude(magnitude)
+	{
+		return this.normalize().multiply(magnitude);
+	}
 }
 
 function getPowIn(t,pow) 

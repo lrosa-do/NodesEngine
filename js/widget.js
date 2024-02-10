@@ -50,20 +50,28 @@ class Widget extends Basic
 
 class Slider extends Widget 
 {
-    constructor(min, max, value, horizontal =true) 
+    constructor(min, max, value,label, horizontal =true) 
     {
         super();
         this.min = min;
         this.max = max;
         this.value = Math.min(Math.max(value, min), max);
         this.horizontal = horizontal;
-        this.label="";
+        this.label=label || "";
         this.OnChange = null;
         this.red=224;
         this.green=224;
         this.blue=224;
+        this.labelSize=14;
     }
 
+    UpdateBound()
+    {
+        this.bound.x=this.realX()-1;
+        this.bound.y=this.realY()-1;
+        this.bound.width=this.width  +1;
+        this.bound.height=this.height+1;
+    }
     setOnChange(event)
     {
         this.OnChange=event;
@@ -76,45 +84,60 @@ class Slider extends Widget
         return this;
     }
 
-    render() 
+    OnRender(ctx) 
     {
         this.UpdateBound();
-        this.setAlpha();
+        super.OnRender(ctx);
+
      
 
         if (this.focus)
         {
-            // ctx.strokeStyle = '#827D7B';
-            // ctx.lineWidth = 1.1;
-            // ctx.strokeRect(this.bound.x, this.bound.y, this.bound.width, this.bound.height);
-            // ctx.lineWidth=1;
-       
-            rect(ctx, this.bound.x, this.bound.y, this.bound.width, this.bound.height, makecol(150,200,200,1),1.5);
+            Game.SetColor(150,200,200);
+            Game.SetLineWidth(1.1);
+            Game.RectangleLine(this.bound.x, this.bound.y, this.bound.width+1, this.bound.height+1);
+            Game.SetLineWidth(1);
+            Game.SetCursor("pointer");
         }
 
     
         if (this.horizontal) 
         {
-            this.setFillColor();
-            ctx.fillRect(this.realX(), this.realY(), this.width, this.height);
-            ctx.fillStyle = '#3498db';
+           
+            Game.SetColor(224,224,224);
+            Game.Rectangle(this.realX(), this.realY(), this.width, this.height);
+            
+           
             const normalizedValue = (this.value - this.min) / (this.max - this.min);
             const fillWidth = (this.width * normalizedValue);
-            ctx.fillRect(this.realX(), this.realY(), fillWidth, this.height);
-            let lx=this.realX() + this.width/2;
-            let ly=this.realY() + this.height/2 ; 
-            fillText(ctx,`${this.label} ${this.value.toFixed(1)}`,lx,ly,makecol(55,55,55,255),"center");
+     
+            Game.SetColor(52,152,219);
+  
+            Game.Rectangle(this.realX(), this.realY(), fillWidth, this.height,1);
+            let lx=this.realX() + (this.width * 0.5);
+            let ly=this.realY() + (this.height * 0.5)+((this.labelSize-4)*0.5); 
+            Game.SetColor(55,55,55);
+            Game.SetFont("Arial",this.labelSize);
+            Game.Text(`${this.label} ${this.value.toFixed(1)}`,lx,ly,"center");
         } else 
         {
-            this.setFillColor();
-            ctx.fillRect(this.realX(), this.realY(), this.width, this.height);
-            ctx.fillStyle = '#3498db';//'#383635';
+            Game.SetColor(224,224,224);
+            
+            Game.Rectangle(this.realX(), this.realY(), this.width, this.height);
+            
+            
+            //ctx.fillStyle = '#3498db';//'#383635';
             const normalizedValue = (this.value - this.min) / (this.max - this.min);
             const fillHeight = (this.height * normalizedValue);
-            ctx.fillRect(this.realX(), this.realY() + this.height - fillHeight, this.width, fillHeight);
+            
+            Game.SetColor(52,152,219);
+            Game.Rectangle(this.realX(), this.realY() + this.height - fillHeight, this.width, fillHeight);
+
+
             let lx=this.realX() + this.width/2;
             let ly=this.realY() + this.height + 10; 
-            fillText(ctx,`${this.label} ${this.value.toFixed(1)}`,lx,ly,makecol(55,55,55,255),"center");
+            Game.SetColor(255,255,255);
+            Game.Text(`${this.label} ${this.value.toFixed(1)}`,lx,ly,"center");
         }
     }
 
@@ -127,8 +150,12 @@ class Slider extends Widget
 
     mouse_up(x, y, button) 
     {
-        this.dragging = false;
+        if (!this.focus)
+        {
+  
         this.focus=false;
+        }
+        this.dragging = false;
     }
 
     mouse_move(x, y)
@@ -169,8 +196,8 @@ class Button extends Widget
         this.is_down=false;
         this.OnClick = null;
   
-        this.width = 100; //  padrão
-        this.height = 40; //  padrão
+        this.width = 90; //  padrão
+        this.height = 30; //  padrão
         this.red=224;
         this.green=224;
         this.blue=224;
@@ -182,41 +209,45 @@ class Button extends Widget
         return this;
     }
 
-    render() 
+    OnRender(ctx) 
     {
         this.UpdateBound();
-        this.setAlpha();
 
-        if (this.focus && !this.is_down)
-            rect(ctx, this.bound.x, this.bound.y, this.bound.width+1, this.bound.height+1, makecol(150,200,200,1),1.5);
+
+         if (this.focus && !this.is_down)
+         {
+            Game.SetColor(150,200,200);
+            Game.RectangleLine(this.bound.x, this.bound.y, this.bound.width+1, this.bound.height+1,1);
+            Game.SetCursor("pointer");
+         }
+        //     rect(ctx, this.bound.x, this.bound.y, this.bound.width+1, this.bound.height+1, makecol(150,200,200,1),1.5);
 
 
        // ctx.fillStyle = '#e0e0e0';
-        this.setFillColor();
+        Game.SetColor(this.red,this.green,this.blue);
         if (this.is_down)
             ctx.fillRect(this.realX()+1, this.realY()+1, this.width+1, this.height);
         else
              ctx.fillRect(this.realX(), this.realY(), this.width, this.height);
         
 
-        ctx.fillStyle = '#505050';
-        ctx.font = '14px Arial';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        let textX = this.realX() + this.width / 2;
-        let textY = this.realY() + this.height / 2;
+        Game.SetColor(55,55,55);
+        Game.SetFont("Arial",14);
+
+        let textX = this.realX() + (this.width  *0.5 );
+        let textY = this.realY() + (this.height *0.5 ) + 6;
         if (this.is_down)
             textX+=1;
 
-        ctx.fillText(this.label, textX, textY);
+   
+        Game.Text(this.label,textX, textY,"center");
     }
 
     mouse_down(x, y, button) 
     {
         if (this.MouseIn(x, y) && button===0)
         {
-            console.log("click");
-            this.is_down=true;
+           this.is_down=true;
             if (this.OnClick!=null)
             {
                 this.is_down=false;
@@ -239,25 +270,35 @@ class Button extends Widget
 }
 
 
-class Gui extends Widget
+class Window extends Widget
 {
-    constructor()
+    constructor(label,x,y,width, height)
     {
         super();
+        this.width = width;
+        this.height = height;
+        this.x = x;
+        this.y = y;
+        this.last_x=x;
+        this.last_y=y;
         this.widgets=[];
+        this.widgets=[];
+        this.hide=false;
+        this.on_closer=false;
+        this.on_dragger=false;
+        this.label = label || "Window";
     }
 
     add(widget)
     {
         widget.parent=this;
         widget.stage=this.stage;
-        widget.game =this.game;
         this.widgets.push(widget);
     }
 
-    addSlider(x,y,width,height,min,max,value,horizontal)
+    AddSlider(x,y,width,height,min,max,value,label,horizontal)
     {
-        let slider = new Slider(min,max,value,horizontal);
+        let slider = new Slider(min,max,value,label,horizontal);
         slider.x=x;
         slider.y=y;
         slider.width =width;
@@ -265,7 +306,7 @@ class Gui extends Widget
         this.add(slider);
         return slider;
     }
-    addButton(x,y,label)
+    AddButton(x,y,label)
     {
         let button = new Button(label)
         button.x=x;
@@ -273,11 +314,11 @@ class Gui extends Widget
         this.add(button);
         return button;
     }
-    renderWidgets()
+    renderWidgets(ctx)
     {
         for (const child of this.widgets) 
         {
-            child.render();
+            child.OnRender(ctx);
         }
     }
 
@@ -289,18 +330,83 @@ class Gui extends Widget
         }
     }
 
-    update(dt)
+    OnUpdate(dt)
     {
    
         this.updateWidgets(dt);
+        let width = Game.width;
+        let height = Game.height;
+        //move a janela com o resize do game 
+        if (this.x > width-this.width)
+        {
+            this.x = width-this.width;
+        } 
+        if (this.y > height-this.height)
+        {
+            this.y = height-this.height;
+        }
+
     }
 
-    render()
+    OnRender(ctx)
     {
-        this.renderWidgets();
+        this.UpdateBound();
+        super.OnRender(ctx);
+        Game.SetCursor("default");
+        if (!this.hide) 
+            Game.SetColor(55,55,155);
+        else
+            Game.SetColor(55,55,55);
+        Game.Rectangle(this.realX(), this.realY()-15, this.width, 15);
+    
+        if (!this.hide) 
+             Game.SetColor(255,255,255);
+        else
+            Game.SetColor(155,155,155);
+        Game.Text(this.label,this.realX()+5,this.realY()-3);
+        
+        if (this.on_closer)
+        {
+            Game.SetColor(255,55,155);
+            Game.SetCursor("pointer");
+        }
+        else 
+        {
+          
+            if (!this.hide) 
+                Game.SetColor(195,55,155);
+            else
+                Game.SetColor(155,190,155);
+        }
+        Game.Circle(this.realX()+this.width-10, this.realY()-8, 5);
+        
+        if (!this.hide) 
+        {
+            Game.SetColor(55,55,55);
+            ctx.fillRect(this.realX(), this.realY(), this.width, this.height);
+            this.renderWidgets(ctx);
+        }
+        if (this.on_dragger)
+        {
+            Game.SetCursor("move");
+            Game.SetColor(155,155,155);
+            Game.RectangleLine(this.realX(), this.realY()-15, this.width, 15,1);
+        
+        }
+
     }
     mouse_down(x,y,button)
     {
+        if (this.on_dragger)
+        {
+            this.dragging=true;
+            this.dragX=x-this.realX();
+            this.dragY=y-this.realY();
+        }
+        if (this.on_closer)
+        {
+            this.hide = !this.hide;
+        }
         for (const child of this.widgets) 
         {
             if (child.MouseIn(x,y))
@@ -313,12 +419,21 @@ class Gui extends Widget
         {
             child.mouse_up(x,y,button);
         }
+        this.dragging=false;
     }
     mouse_move(x,y)
     {
+        this.on_closer=PointInRect(x,y,this.realX()+this.width-20,this.realY()-20,20,20);
+        this.on_dragger=PointInRect(x,y,this.realX(),this.realY()-20,this.width-20,20);
+        if (this.dragging)
+        {
+            this.x=x-this.dragX;
+            this.y=y-this.dragY;
+        }
         for (const child of this.widgets) 
         {  
                 child.mouse_move(x,y);
         }
+
     }
 }
