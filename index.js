@@ -68,7 +68,7 @@ class Player extends NodeScript
     }
     render (context)
     {
-       Game.Circle(0,0,this.radius);
+     //  Game.Circle(0,0,this.radius);
     }
 
     update(dt)
