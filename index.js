@@ -2,7 +2,7 @@
 
 
 
-class Player extends NodeScript
+class Player extends Actor
 {
     constructor(mass,gravitiy,coeficiente)
     {
@@ -20,11 +20,11 @@ class Player extends NodeScript
     calculateDrag() 
     {
         // Magnitude is coefficient * speed squared
-        let speed = this.parent.velocity.magnitude();
+        let speed = this.velocity.magnitude();
         let dragMagnitude = this.coeficiente * speed * speed;
     
         // Direction is inverse of velocity
-        let dragForce = new Vector2(-this.parent.velocity.x, -this.parent.velocity.y);
+        let dragForce = new Vector2(-this.velocity.x, -this.velocity.y);
         
     
         // Scale according to magnitude
@@ -39,54 +39,75 @@ class Player extends NodeScript
 
     ready()
     {
-        console.log("Player");
-        this.radius = 20 + this.parent.scaleX* this.mass;
-        this.spriteEyes = new Sprite(4);
-        this.animation = new Animator(this.spriteEyes);
+        
+        let body =new Node();
+        let spr = new Sprite(random(0,2));
+        let w = 40;
+        let h = 40;
+        body.Add(spr);
+        body.scaleX=0.5 * this.mass;
+        body.scaleY=0.5 * this.mass;
+        spr.offsetX = -w;
+        spr.offsetY = -h;
+
+        this.Add(body);
+
+        let scaleFactor = Math.min(body.scaleX, body.scaleY);
+
+   
+        this.radius =(Math.min(w,h) ) * scaleFactor;
+
+     //   this.radius = Math.sqrt((w * w + h * h) / 4) * Math.sqrt(body.scaleX * body.scaleY);
+
+   
+
+  
+   
+         let spriteEyes = new Sprite(4);
+         spriteEyes.offsetX = -w/2;
+         spriteEyes.offsetY = -h/2;
+
+
+
+         this.animation = new Animator(spriteEyes);
 
         let a = Array.from({ length: 16 }, (_, i) => i);
 
-        this.animation.AddAnimation("idle",[3,4,5,6,7,8,9,10,11,12,13,14,15],6);
-        this.animation.SetAnimation("idle");
-        this.animation.SetFrame(3);
+         this.animation.AddAnimation("idle",[3,4,5,6,7,8,9,10,11,12,13,14,15],6);
+         this.animation.SetAnimation("idle");
+         this.animation.SetFrame(3);
 
-        this.nodeHead = new Node();
-        this.nodeHead.x=-25 * this.parent.scaleX;
-        this.nodeHead.y=-15 * this.parent.scaleY;
+         body.Add(spriteEyes);
+         this.Add(this.animation);
 
-        let body = new Sprite(random(0,2));
-
-        this.nodeHead.Add(body);
-        
-        this.nodeHead.Add(this.spriteEyes);
-        this.nodeHead.Add(this.animation);
-
- 
-        this.Add(this.nodeHead);
 
       
     }
     render (context)
     {
-     //  Game.Circle(0,0,this.radius);
+        // Game.SetColor(255,55,255);
+        // Game.CircleLine(0,0,this.radius);
+       
+        // Game.SetColor(255,55,55);
+        // Game.Circle(0,0,1.5);
     }
 
     update(dt)
     {   
 
-        this.OnWater = this.parent.y> this.water.y;
+        this.OnWater = this.y> this.water.y;
         if (this.OnWater)
         {
             let dragForce = this.calculateDrag(this.coeficiente);
-            this.parent.ApplyForce(dragForce);
+            this.ApplyForce(dragForce);
           
         }
         let gravityForce = new Vector2(0, this.gravitiy * this.mass);
-        this.parent.ApplyForce(gravityForce);
+        this.ApplyForce(gravityForce);
       
 
 
-        let velocity = this.parent.velocity.magnitude();
+        let velocity = this.velocity.magnitude();
         if (velocity > 5.0 && velocity < 10.5)
         {
             this.animation.SetFrame(1);
@@ -102,10 +123,10 @@ class Player extends NodeScript
       //  console.log(velocity);
 
         let ground = (this.water.y+200);
-        if (this.parent.y > ground-this.radius)
+        if (this.y > ground-this.radius)
         {
-            this.parent.velocity.y *= -0.9;
-            this.parent.y = ground - this.radius;
+            this.velocity.y *= -0.9;
+            this.y = ground - this.radius;
            
            
         }
@@ -139,8 +160,8 @@ class MainScene extends Scene
        
 
         this.massas=[];
-        let mass_min = 2;
-        let mass_max = 6;
+        let mass_min = 0.5;
+        let mass_max = 5;
         this.massas.push(randomFloat(mass_min,mass_max));
         this.massas.push(randomFloat(mass_min,mass_max));
         this.massas.push(randomFloat(mass_min,mass_max));
@@ -164,11 +185,11 @@ class MainScene extends Scene
         {
             this.massas[3] = value;
         }
-        window.AddSlider(10,130,180,20, 0.1,9,this.gravitiy,"Gravidade - ",true).OnChange = (value) =>
+        window.AddSlider(10,130,180,20, 0.1,2,this.gravitiy,"Gravidade - ",true).OnChange = (value) =>
         {
             this.gravitiy = value;
         }
-        window.AddSlider(10,160,180,20, 0,1,this.coeficiente,"Coeficiente - ",true).OnChange = (value) =>
+        window.AddSlider(10,160,180,20, 0,0.4,this.coeficiente,"Coeficiente - ",true).OnChange = (value) =>
         {
             this.coeficiente = value;
         }
@@ -186,13 +207,21 @@ class MainScene extends Scene
     }
     addNodes()
     {
+        const canvasWidth = Game.width;
+        // Largura de cada objeto
+        const objectWidth = 80;
+        // Número de objetos
+        const numObjects = 4;
+        // Calcular o espaço entre os objetos
+        const spaceBetween = (canvasWidth - (objectWidth * numObjects)) / (numObjects + 1);
 
-       for (let i = 0; i < this.massas.length; i++)
-       {
-           let x = 40 + (i*100);
-           let y = 100;
-           this.addNode(x,y,this.massas[i]);
-       }
+
+        for (let i = 0; i < this.massas.length; i++)
+        {
+            let x = spaceBetween * (i + 1) + objectWidth * i; 
+            let y = 1;
+            this.addNode(x,y,this.massas[i]);
+        }
     }
     removePlayer()
     {
@@ -205,26 +234,14 @@ class MainScene extends Scene
            }
        }
     }
+
     addNode(x,y,mass)
     {
-
-        
-        let node = new Actor("player",mass);
-        
-        
-
-        node.Add(new Player(mass,this.gravitiy,this.coeficiente));
-
-     
+        let node = new Player(mass,this.gravitiy,this.coeficiente);
         node.y=y;
-        node.scaleX=0.5 * (mass*0.5);
-        node.scaleY=0.5 * (mass*0.5);
-        node.x= x ;
-
-        // nodeShape.x=-40 * node.scaleX;
-        // nodeShape.y=-40 * node.scaleY;
-        
+        node.x=x;
         this.Add(node);
+        return node;
     }
    
 
@@ -237,7 +254,7 @@ class MainScene extends Scene
 
 
         Game.SetColor(45,45,45);
-        Game.Rectangle(0,SCREEN_HEIGHT-60,SCREEN_WIDTH,10);
+        Game.Rectangle(0,SCREEN_HEIGHT-50,SCREEN_WIDTH,10);
 
         Game.SetAlpha(255);
     }

@@ -78,13 +78,14 @@ class Basic
     }
     OnRender(ctx)
     {
-        this.render(ctx);
+      
         for (const child of this.children) 
         {
             child.OnPreRender(ctx);
             child.OnRender(ctx);
             child.OnPostRender(ctx);
         }
+        this.render(ctx);
        
     }
     OnPreRender(ctx)
@@ -390,6 +391,8 @@ class Sprite extends Basic
     {
         super("Sprite");
         this.graph=graph;
+        this.offsetX=0;
+        this.offsetY=0;
         this.image = getImage(graph);
         if (bound!==undefined)
         {
@@ -402,6 +405,13 @@ class Sprite extends Basic
            
         }
         this.type="SPRITE";
+        this.width=0;
+        this.height=0;
+        if (this.image!==undefined)
+        {
+            this.width = this.image.width;
+            this.height = this.image.height;
+        }
     }
     SetClip(x,y,w,h)
     {
@@ -410,6 +420,9 @@ class Sprite extends Basic
         this.clip.width =w;
         this.clip.height=h;
         this.useClip=true;
+        this.width  = this.clip.width;
+        this.height = this.clip.height;
+
 
     }
     SetGraph(gr)
@@ -430,12 +443,12 @@ class Sprite extends Basic
         {
             if (this.clip!==null && this.useClip===true)
             {   
-                let sourceWidth  = this.clip.width;
-                let sourceHeight = this.clip.height;
-                ctx.drawImage(this.image.image,this.clip.x,this.clip.y,sourceWidth,sourceHeight,0,0,sourceWidth,sourceHeight);
+                ctx.drawImage(this.image.image,this.clip.x,this.clip.y,sourceWidth,sourceHeight,this.offsetX,this.offsetY,sourceWidth,sourceHeight);
             } else
             {
-                ctx.drawImage(this.image.image,0,0);
+                this.width  = this.image.width;
+                this.height = this.image.height;
+                ctx.drawImage(this.image.image,this.offsetX,this.offsetY);
             }
             
         }
@@ -450,6 +463,8 @@ class BackGround extends Basic
         this.graph=graph;
         this.width=width;
         this.height=height;
+        this.offsetX=0;
+        this.offsetY=0;
         this.image = getImage(graph);
         this.type="BACKGROUND";
     }
@@ -465,7 +480,7 @@ class BackGround extends Basic
         super.OnRender(ctx);
         if (this.image !==null)
         {
-            ctx.drawImage(this.image.image,0,0,this.width,this.height);
+            ctx.drawImage(this.image.image,this.offsetX,this.offsetY,this.width,this.height);
         }
     }
 }
@@ -483,6 +498,8 @@ class ScrollBackground extends Basic
         this.graph=graph;
         this.width=width;
         this.height=height;
+        this.offsetX=0;
+        this.offsetY=0;
         this.image = getImage(graph);
         this.type="SCROLL_BACKGROUND";
 
@@ -572,7 +589,7 @@ class ScrollBackground extends Basic
                         (-this.scrollY + y * this.image.height) -off_y,
                         this.image.width  -off_x,
                         this.image.height -off_y ,
-                        0,0,fill_w,fill_h
+                        this.offsetX,this.offsetY,fill_w,fill_h
                     );
 
                     off_x += this.frag_x;
@@ -584,23 +601,15 @@ class ScrollBackground extends Basic
 
                 
 
-            ctx.fillStyle = 'lime';
-            ctx.font = '13px Arial';
-            ctx.textAlign = 'center';
-            ctx.fillText(`${this.scrollX} ${this.scrollY}  ${this.max_dist_x} ${this.max_dist_y}  ${this.scrollXSize} ${this.scrollYSize}`, 80, 80);
+            // ctx.fillStyle = 'lime';
+            // ctx.font = '13px Arial';
+            // ctx.textAlign = 'center';
+            // ctx.fillText(`${this.scrollX} ${this.scrollY}  ${this.max_dist_x} ${this.max_dist_y}  ${this.scrollXSize} ${this.scrollYSize}`, 80, 80);
           
         }
     }
 }
 
-class NodeScript extends Basic
-{
-    constructor(name)
-    {
-        super(name);
-        this.type="NODE_SCRIPT";
-    }
-}
 
 
 class Node extends Basic

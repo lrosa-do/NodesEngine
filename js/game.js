@@ -92,6 +92,20 @@ function setImageName(index,name)
     game_images[index].name=name;
 }
 
+function getImageIndex(name)
+{
+    for (let i = 0; i < game_images.length; i++)
+    {
+        const image = game_images[i];
+        if (image.name === name)
+        {
+            return i;
+        }
+    }
+    console.log(`Imagem "${name}" não encontrada.`);
+    return -1;
+}
+
 
 function getImageByName(name)
 {
